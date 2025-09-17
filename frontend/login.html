@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FC-CRM System - ログイン</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-header {
+            background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .login-body {
+            padding: 2rem;
+        }
+
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .btn-login {
+            background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-login:hover {
+            background: linear-gradient(45deg, #0b5ed7, #0bb7d8);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .demo-credentials {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .password-strength {
+            margin-top: 0.5rem;
+        }
+
+        .strength-bar {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak { background-color: #dc3545; }
+        .strength-medium { background-color: #ffc107; }
+        .strength-strong { background-color: #198754; }
+
+        .loading-spinner {
+            display: none;
+        }
+
+        .security-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- ログインヘッダー -->
+        <div class="login-header">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-envelope-check"></i>
+                FC-CRM System
+            </h1>
+            <p class="mb-0 mt-2 opacity-75">管理者ログイン</p>
+        </div>
+
+        <!-- ログインフォーム -->
+        <div class="login-body">
+            <!-- デモ用認証情報表示 -->
+            <div class="demo-credentials">
+                <h6 class="mb-2"><i class="bi bi-info-circle"></i> デモ用認証情報</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <strong>管理者:</strong><br>
+                        ID: admin<br>
+                        PW: fc-crm-2024!
+                    </div>
+                    <div class="col-6">
+                        <strong>閲覧者:</strong><br>
+                        ID: demo<br>
+                        PW: demo123
+                    </div>
+                </div>
+            </div>
+
+            <!-- ログインフォーム -->
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="username" class="form-label">
+                        <i class="bi bi-person"></i> ユーザー名
+                    </label>
+                    <input type="text" class="form-control" id="username" required
+                           placeholder="ユーザー名を入力" autocomplete="username">
+                    <div class="invalid-feedback" id="usernameError"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">
+                        <i class="bi bi-lock"></i> パスワード
+                    </label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="password" required
+                               placeholder="パスワードを入力" autocomplete="current-password">
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                    <div class="invalid-feedback" id="passwordError"></div>
+
+                    <!-- パスワード強度表示 -->
+                    <div class="password-strength" id="passwordStrength" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">パスワード強度:</small>
+                            <small id="strengthText" class="fw-bold"></small>
+                        </div>
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar" id="strengthBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">
+                        <small>ログイン状態を保持する（8時間）</small>
+                    </label>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-login">
+                        <span class="button-text">
+                            <i class="bi bi-box-arrow-in-right"></i> ログイン
+                        </span>
+                        <span class="loading-spinner">
+                            <i class="bi bi-hourglass-split"></i> 認証中...
+                        </span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- セキュリティ注意事項 -->
+            <div class="security-notice">
+                <h6 class="mb-2"><i class="bi bi-shield-check"></i> セキュリティについて</h6>
+                <ul class="mb-0" style="padding-left: 1.2rem;">
+                    <li>このシステムは開発・デモ用です</li>
+                    <li>セッションは8時間で自動的に期限切れになります</li>
+                    <li>共有PCでは必ずログアウトしてください</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- エラー表示モーダル -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="errorModalLabel">
+                        <i class="bi bi-exclamation-triangle"></i> ログインエラー
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- アプリケーション JS -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        // ログインフォーム処理
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const togglePassword = document.getElementById('togglePassword');
+            const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+            // 既にログイン済みの場合はリダイレクト
+            if (authManager.isAuthenticated()) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const returnUrl = urlParams.get('return');
+                authManager.redirectToMain(returnUrl);
+                return;
+            }
+
+            // パスワード表示切り替え
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+
+                if (type === 'password') {
+                    togglePasswordIcon.className = 'bi bi-eye';
+                } else {
+                    togglePasswordIcon.className = 'bi bi-eye-slash';
+                }
+            });
+
+            // パスワード強度チェック
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                const strengthContainer = document.getElementById('passwordStrength');
+                const strengthBar = document.getElementById('strengthBar');
+                const strengthText = document.getElementById('strengthText');
+
+                if (password.length > 0) {
+                    strengthContainer.style.display = 'block';
+
+                    const strength = authManager.checkPasswordStrength(password);
+                    const percentage = (strength.score / 5) * 100;
+
+                    strengthBar.style.width = percentage + '%';
+                    strengthBar.className = `progress-bar strength-${strength.strength}`;
+                    strengthText.textContent = {
+                        weak: '弱い',
+                        medium: '普通',
+                        strong: '強い'
+                    }[strength.strength];
+                    strengthText.className = `fw-bold text-${strength.strength === 'weak' ? 'danger' : strength.strength === 'medium' ? 'warning' : 'success'}`;
+                } else {
+                    strengthContainer.style.display = 'none';
+                }
+            });
+
+            // フォーム送信処理
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value;
+                const submitButton = this.querySelector('button[type="submit"]');
+                const buttonText = submitButton.querySelector('.button-text');
+                const loadingSpinner = submitButton.querySelector('.loading-spinner');
+
+                // バリデーション
+                clearErrors();
+                let hasError = false;
+
+                if (!username) {
+                    showFieldError('username', 'ユーザー名を入力してください');
+                    hasError = true;
+                }
+
+                if (!password) {
+                    showFieldError('password', 'パスワードを入力してください');
+                    hasError = true;
+                }
+
+                if (hasError) {
+                    return;
+                }
+
+                // ローディング状態
+                submitButton.disabled = true;
+                buttonText.style.display = 'none';
+                loadingSpinner.style.display = 'inline';
+
+                try {
+                    // ログイン処理
+                    const authData = authManager.login(username, password);
+
+                    // 成功時の処理
+                    UTILS.log('info', 'ログイン成功', { username: authData.user.username });
+
+                    // リダイレクト
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const returnUrl = urlParams.get('return');
+
+                    setTimeout(() => {
+                        authManager.redirectToMain(returnUrl);
+                    }, 500);
+
+                } catch (error) {
+                    // エラー処理
+                    UTILS.log('error', 'ログイン失敗', { username, error: error.message });
+                    showError(error.message);
+
+                } finally {
+                    // ローディング状態解除
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    loadingSpinner.style.display = 'none';
+                }
+            });
+
+            // デモ用クイックログイン
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    usernameInput.value = 'admin';
+                    passwordInput.value = 'fc-crm-2024!';
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+
+        /**
+         * フィールドエラー表示
+         */
+        function showFieldError(fieldName, message) {
+            const field = document.getElementById(fieldName);
+            const errorElement = document.getElementById(fieldName + 'Error');
+
+            field.classList.add('is-invalid');
+            errorElement.textContent = message;
+        }
+
+        /**
+         * エラー表示クリア
+         */
+        function clearErrors() {
+            const invalidFields = document.querySelectorAll('.is-invalid');
+            const errorElements = document.querySelectorAll('.invalid-feedback');
+
+            invalidFields.forEach(field => field.classList.remove('is-invalid'));
+            errorElements.forEach(element => element.textContent = '');
+        }
+
+        /**
+         * エラーモーダル表示
+         */
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            new bootstrap.Modal(document.getElementById('errorModal')).show();
+        }
+    </script>
+</body>
+</html>
