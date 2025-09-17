@@ -1,0 +1,22 @@
+# GitHub Pages設定
+title: FC-CRM System
+description: 特定電子メール法に準拠した営業支援システム
+
+# GitHub Pages用設定
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - README.md
+
+# 除外ファイル
+exclude:
+  - docs/
+  - backend/
+  - database/
+  - tests/
+  - vendor/
+  - composer.json
+  - composer.lock
