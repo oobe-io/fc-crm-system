@@ -1,0 +1,28 @@
+# 環境設定
+.env
+config/config.php
+
+# 依存関係
+vendor/
+node_modules/
+
+# ログ・キャッシュ
+*.log
+cache/
+tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Obsidian
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# 機密情報
+*.key
+*.pem

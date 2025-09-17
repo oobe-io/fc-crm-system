@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FC-CRM System - 企業管理</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="bi bi-envelope-check"></i> FC-CRM System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="bi bi-speedometer2"></i> ダッシュボード
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="companies.html">
+                            <i class="bi bi-building"></i> 企業管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="send.html">
+                            <i class="bi bi-send"></i> 送信管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ng-list.html">
+                            <i class="bi bi-shield-x"></i> NGリスト
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="logs.html">
+                            <i class="bi bi-file-text"></i> ログ閲覧
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="settings.html">
+                            <i class="bi bi-gear"></i> 設定
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <div class="container-fluid mt-4">
+        <!-- ページヘッダー -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-building"></i> 企業管理</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#companyModal" onclick="openCompanyModal()">
+                <i class="bi bi-plus-circle"></i> 新規登録
+            </button>
+        </div>
+
+        <!-- フィルター・検索 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="filterCategory" class="form-label">カテゴリ</label>
+                        <select class="form-select" id="filterCategory" onchange="filterCompanies()">
+                            <option value="">全て</option>
+                            <option value="メイン">メイン</option>
+                            <option value="サブ">サブ</option>
+                            <option value="テスト">テスト</option>
+                            <option value="停止中">停止中</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterStatus" class="form-label">ステータス</label>
+                        <select class="form-select" id="filterStatus" onchange="filterCompanies()">
+                            <option value="">全て</option>
+                            <option value="active">アクティブ</option>
+                            <option value="inactive">非アクティブ</option>
+                            <option value="blocked">ブロック</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="searchKeyword" class="form-label">検索</label>
+                        <input type="text" class="form-control" id="searchKeyword" placeholder="企業名またはドメインで検索" onkeyup="debounceSearch()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button class="btn btn-outline-secondary" onclick="resetFilters()">
+                                <i class="bi bi-arrow-clockwise"></i> リセット
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 企業一覧テーブル -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>企業一覧 <span class="badge bg-secondary" id="company-count">0</span></span>
+                <div>
+                    <span class="me-2">表示件数:</span>
+                    <select class="form-select form-select-sm d-inline-block w-auto" id="perPage" onchange="loadCompanies()">
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>企業名</th>
+                                <th>ドメイン</th>
+                                <th>業界</th>
+                                <th>カテゴリ</th>
+                                <th>優先度</th>
+                                <th>ステータス</th>
+                                <th>最終コンタクト</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companies-table-body">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">
+                                    <i class="bi bi-hourglass-split"></i> 読み込み中...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ページネーション -->
+                <nav aria-label="ページナビゲーション">
+                    <ul class="pagination justify-content-center" id="pagination">
+                        <!-- ページネーションはJavaScriptで生成 -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- 企業登録・編集モーダル -->
+    <div class="modal fade" id="companyModal" tabindex="-1" aria-labelledby="companyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="companyModalLabel">企業登録</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="companyForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="companyName" class="form-label">企業名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="companyName" required>
+                                <div class="invalid-feedback" id="companyNameError"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="domain" class="form-label">ドメイン <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="domain" placeholder="example.com" required>
+                                <div class="invalid-feedback" id="domainError"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="industry" class="form-label">業界</label>
+                                <input type="text" class="form-control" id="industry" placeholder="IT・システム開発">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contactFormUrl" class="form-label">問い合わせフォームURL</label>
+                                <input type="url" class="form-control" id="contactFormUrl" placeholder="https://example.com/contact">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="category" class="form-label">カテゴリ</label>
+                                <select class="form-select" id="category">
+                                    <option value="メイン">メイン</option>
+                                    <option value="サブ">サブ</option>
+                                    <option value="テスト">テスト</option>
+                                    <option value="停止中">停止中</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="priority" class="form-label">優先度</label>
+                                <select class="form-select" id="priority">
+                                    <option value="1">1 (最高)</option>
+                                    <option value="2">2 (高)</option>
+                                    <option value="3">3 (中)</option>
+                                    <option value="4">4 (低)</option>
+                                    <option value="5">5 (最低)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="status" class="form-label">ステータス</label>
+                                <select class="form-select" id="status">
+                                    <option value="active">アクティブ</option>
+                                    <option value="inactive">非アクティブ</option>
+                                    <option value="blocked">ブロック</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="hasRecaptcha">
+                                    <label class="form-check-label" for="hasRecaptcha">
+                                        reCAPTCHA有り（このフォームはスキップされます）
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label for="notes" class="form-label">備考</label>
+                                <textarea class="form-control" id="notes" rows="3" placeholder="特記事項があれば記入"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCompany()">
+                        <i class="bi bi-check-circle"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 削除確認モーダル -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">削除確認</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>以下の企業を削除しますか？</p>
+                    <div class="alert alert-warning">
+                        <strong id="deleteCompanyName"></strong><br>
+                        <small class="text-muted">この操作は取り消せません。送信履歴がある場合は無効化されます。</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteCompany()">
+                        <i class="bi bi-trash"></i> 削除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- アプリケーション JS -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/companies.js"></script>
+
+    <script>
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCompanies();
+        });
+    </script>
+</body>
+</html>

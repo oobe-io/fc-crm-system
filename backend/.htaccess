@@ -1,0 +1,134 @@
+# Apache設定ファイル - セキュリティとURL書き換え
+
+# モジュールの有効化チェック
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # APIへのルーティング
+    # /api/* を /backend/api/index.php にリダイレクト
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+    # 直接アクセス禁止（API経由のみ許可）
+    RewriteCond %{REQUEST_URI} !^/api/
+    RewriteCond %{REQUEST_URI} ^/backend/
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>
+
+# PHPファイルの直接アクセス制限
+<Files "*.php">
+    <RequireAll>
+        Require all denied
+        # API経由のアクセスのみ許可
+        <RequireAny>
+            Require expr %{REQUEST_URI} =~ m#^/api/#
+        </RequireAny>
+    </RequireAll>
+</Files>
+
+# 設定ファイルの保護
+<FilesMatch "\.(env|ini|conf|config)$">
+    Require all denied
+</FilesMatch>
+
+# ログファイルの保護
+<FilesMatch "\.log$">
+    Require all denied
+</FilesMatch>
+
+# バックアップファイルの保護
+<FilesMatch "\.(bak|backup|old|tmp)$">
+    Require all denied
+</FilesMatch>
+
+# Composerファイルの保護
+<FilesMatch "(composer\.(json|lock)|vendor/)">
+    Require all denied
+</FilesMatch>
+
+# Gitファイルの保護
+<FilesMatch "^\.git">
+    Require all denied
+</FilesMatch>
+
+# セキュリティヘッダーの設定
+<IfModule mod_headers.c>
+    # XSS対策
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # コンテンツタイプスニッフィング対策
+    Header always set X-Content-Type-Options "nosniff"
+
+    # クリックジャッキング対策
+    Header always set X-Frame-Options "DENY"
+
+    # リファラーポリシー
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # HTTPS強制（HTTPS環境でのみ）
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+
+    # キャッシュ制御（API レスポンス）
+    <FilesMatch "\.(json|php)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>
+
+# PHPの設定上書き
+<IfModule mod_php.c>
+    # エラー表示の無効化（本番環境）
+    php_flag display_errors Off
+    php_flag display_startup_errors Off
+
+    # セッション設定
+    php_value session.cookie_httponly 1
+    php_value session.cookie_secure 1
+    php_value session.use_strict_mode 1
+
+    # アップロードサイズ制限
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+
+    # 実行時間制限
+    php_value max_execution_time 60
+    php_value max_input_time 60
+
+    # メモリ制限
+    php_value memory_limit 128M
+</IfModule>
+
+# MIME タイプ設定
+<IfModule mod_mime.c>
+    AddType application/json .json
+    AddType text/css .css
+    AddType application/javascript .js
+</IfModule>
+
+# 圧縮設定
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# ファイル拡張子の非表示
+Options -Indexes
+
+# サーバー情報の非表示
+ServerTokens Prod
+ServerSignature Off
+
+# エラーページのカスタマイズ
+ErrorDocument 403 /api/error/403
+ErrorDocument 404 /api/error/404
+ErrorDocument 500 /api/error/500

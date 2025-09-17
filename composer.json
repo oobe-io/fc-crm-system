@@ -1,0 +1,15 @@
+{
+    "name": "fc-crm/system",
+    "description": "Form Contact CRM System with ChatGPT Integration",
+    "require": {
+        "php": ">=8.0",
+        "simplehtmldom/simplehtmldom": "^2.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "vlucas/phpdotenv": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "FCCRM\\": "backend/lib/"
+        }
+    }
+}
